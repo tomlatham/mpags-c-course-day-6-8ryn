@@ -3,6 +3,10 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <future>
+#include <thread>
+#include <chrono>
+#include <tuple>
 
 // Our project headers
 #include "CipherFactory.hpp"
@@ -108,9 +112,43 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  // Run the cipher on the input text, specifying whether to encrypt/decrypt
-  std::string outputText { cipher->applyCipher( inputText, settings.cipherMode ) };
+  std::string outputText{""};
 
+  
+  if( settings.cipherType == CipherType::Caesar){
+    auto fn = [&] (size_t first, size_t len ){
+      return (cipher->applyCipher( inputText.substr(first, len), settings.cipherMode));
+    };
+    int numThreads = 4;
+    size_t inputLength = inputText.length();
+    std::vector<std::future< std::string>> futures;
+    for( int i{0}; i< numThreads; ++i){
+      if ( i != (numThreads-1)){
+	futures.push_back( std::async(fn, i*inputLength/numThreads,inputLength/numThreads));
+      }
+      else{
+	futures.push_back( std::async(fn, i*inputLength/numThreads, inputLength/numThreads + inputLength%numThreads));
+      }
+    }
+    for( auto &elem : futures){
+      std::future_status status;
+      do {
+      status = elem.wait_for(std::chrono::seconds(10));
+      if (status == std::future_status::timeout) {
+	std::cout << "waiting... \n";
+      }
+      }
+      while (status != std::future_status::ready);
+      outputText += elem.get();
+    }
+  }
+  else{
+  
+  
+    // Run the cipher on the input text, specifying whether to encrypt/decrypt
+    outputText = cipher->applyCipher( inputText, settings.cipherMode ) ;
+    }
+    
   // Output the transliterated text
   if (!settings.outputFile.empty()) {
 

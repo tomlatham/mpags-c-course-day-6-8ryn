@@ -18,7 +18,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 14)
 
 # - Use our standard set of flags
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -Wfatal-errors -Wshadow -pedantic")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -Wfatal-errors -Wshadow -pedantic -pthread")
 
 # - Add the MPAGSCipher subdirectory to the build
 add_subdirectory(MPAGSCipher)
