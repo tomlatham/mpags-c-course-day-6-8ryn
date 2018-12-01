@@ -13,3 +13,7 @@ TEST_CASE("Vigenere Cipher decryption", "[vigenere]") {
   VigenereCipher cc{"hello"};
   REQUIRE( cc.applyCipher("ALTDWZUFTHLEWZBNQPDGHKPDCALPVSFATWZUIPOHVVPASHXLQSDXTXSZ", CipherMode::Decrypt) == "THISISQUITEALONGMESSAGESOTHEKEYWILLNEEDTOREPEATAFEWTIMES");
 }
+
+TEST_CASE("Vigenere Cipher empty key", "[vigenere]") {
+  REQUIRE_THROWS_AS(VigenereCipher vc{""}, InvalidKey);
+}

@@ -24,14 +24,16 @@ int main(int argc, char* argv[])
   // Options that might be set by the command-line arguments
   ProgramSettings settings { false, false, "", "", "", CipherMode::Encrypt, CipherType::Caesar };
 
-  // Process command line arguments
-  bool cmdLineStatus { processCommandLine(cmdLineArgs, settings) };
-
-  // Any failure in the argument processing means we can't continue
-  // Use a non-zero return value to indicate failure
-  if( !cmdLineStatus ) {
+  // Process command line arguments and catch any exceptions
+  try{
+    processCommandLine(cmdLineArgs, settings);
+  } catch (const MissingArgument& e){
+    std::cerr << "[error] Missing argument: " << e.what() <<std::endl;
     return 1;
+  } catch (const UnknownArgument& e){
+    std::cerr << "[error] Unknown argument: " << e.what() <<std::endl;
   }
+
 
   // Handle help, if requested
   if (settings.helpRequested) {
@@ -103,9 +105,10 @@ int main(int argc, char* argv[])
     }
   }
 
+  try{
   // Request construction of the appropriate cipher
   auto cipher = cipherFactory( settings.cipherType, settings.cipherKey );
-
+  
   // Check that the cipher was constructed successfully
   if ( ! cipher ) {
     std::cerr << "[error] problem constructing requested cipher" << std::endl;
@@ -114,14 +117,17 @@ int main(int argc, char* argv[])
 
   std::string outputText{""};
 
-  
+  // Implements multi-threaded processing of Caesar Cipher
   if( settings.cipherType == CipherType::Caesar){
+    
     auto fn = [&] (size_t first, size_t len ){
       return (cipher->applyCipher( inputText.substr(first, len), settings.cipherMode));
     };
+    
     int numThreads = 4;
     size_t inputLength = inputText.length();
     std::vector<std::future< std::string>> futures;
+    
     for( int i{0}; i< numThreads; ++i){
       if ( i != (numThreads-1)){
 	futures.push_back( std::async(fn, i*inputLength/numThreads,inputLength/numThreads));
@@ -142,6 +148,7 @@ int main(int argc, char* argv[])
       outputText += elem.get();
     }
   }
+  //Other ciphers done without multi-threading
   else{
   
   
@@ -171,4 +178,9 @@ int main(int argc, char* argv[])
   // No requirement to return from main, but we do so for clarity
   // and for consistency with other functions
   return 0;
+  
+  }catch (const InvalidKey& e){
+    std::cerr << "[error] Invalid key: " << e.what() << std::endl;
+    return 1;
+  }
 }

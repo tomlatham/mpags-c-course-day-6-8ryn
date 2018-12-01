@@ -4,12 +4,9 @@
 // Our project headers
 #include "ProcessCommandLine.hpp"
 
-bool processCommandLine(const std::vector<std::string>& args,
+void processCommandLine(const std::vector<std::string>& args,
                         ProgramSettings& settings)
 {
-  // Status flag to indicate whether or not the parsing was successful
-  bool processStatus(true);
-
   // Add a typedef that assigns another name for the given type for clarity
   typedef std::vector<std::string>::size_type size_type;
   const size_type nArgs {args.size()};
@@ -32,10 +29,7 @@ bool processCommandLine(const std::vector<std::string>& args,
       // Handle input file option
       // Next element is filename unless -i is the last argument
       if (i == nArgs-1) {
-        std::cerr << "[error] -i/--infile requires a filename argument" << std::endl;
-        // Set the flag to indicate the error and terminate the loop
-        processStatus = false;
-        break;
+        throw MissingArgument("-i/--infile requires a filename argument");
       }
       else {
         // Got filename, so assign value and advance past it
@@ -47,10 +41,7 @@ bool processCommandLine(const std::vector<std::string>& args,
       // Handle output file option
       // Next element is filename unless -o is the last argument
       if (i == nArgs-1) {
-        std::cerr << "[error] -o/--outfile requires a filename argument" << std::endl;
-        // Set the flag to indicate the error and terminate the loop
-        processStatus = false;
-        break;
+	throw MissingArgument("-o/--outfile requires a filename argument");
       }
       else {
         // Got filename, so assign value and advance past it
@@ -62,10 +53,7 @@ bool processCommandLine(const std::vector<std::string>& args,
       // Handle cipher key option
       // Next element is the key unless -k is the last argument
       if (i == nArgs-1) {
-        std::cerr << "[error] -k/--key requires a string argument" << std::endl;
-        // Set the flag to indicate the error and terminate the loop
-        processStatus = false;
-        break;
+	throw MissingArgument("-k/--key requires a string argument");
       }
       else {
         // Got the key, so assign the value and advance past it
@@ -85,10 +73,7 @@ bool processCommandLine(const std::vector<std::string>& args,
       // Handle cipher type option
       // Next element is the name of the cipher, unless -c is the last argument
       if (i == nArgs-1) {
-        std::cerr << "[error] -c requires a string argument" << std::endl;
-        // Set the flag to indicate the error and terminate the loop
-        processStatus = false;
-        break;
+	throw MissingArgument("-c requires a string argument");
       }
       else {
         // Got the key, so assign the value and advance past it
@@ -99,21 +84,14 @@ bool processCommandLine(const std::vector<std::string>& args,
 	} else if ( args[i+1] == "vigenere" ) {
 	  settings.cipherType = CipherType::Vigenere;
 	} else {
-	  std::cerr << "[error] unknown cipher '" << args[i+1] << "'\n";
-	  processStatus = false;
-	  break;
+	  throw UnknownArgument(std::string("cipher: ") + args[i+1]);
 	}
         ++i;
       }
     }
     else {
-      // Have encoutered an unknown flag, output an error message, set the flag
-      // to indicate the error and terminate the loop
-      std::cerr << "[error] unknown argument '" << args[i] << "'\n";
-      processStatus = false;
-      break;
+      // Have encoutered an unknown flag
+      throw UnknownArgument(std::string("argument: ") + args[i]);
     }
   }
-
-  return processStatus;
 }

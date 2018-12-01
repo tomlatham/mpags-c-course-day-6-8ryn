@@ -9,7 +9,7 @@
 
 /**
  * \file Cipher.hpp
- * \brief Contains the declaration of the purely abstract Cipher base class
+ * \brief Contains the declaration of the purely abstract Cipher base class and the InvalidKey exception
  */
 
 /**
@@ -46,6 +46,21 @@ class Cipher {
     Cipher& operator=(Cipher&& rhs) = default;
     /// Make the default destructor virtual
     virtual ~Cipher() = default;
+};
+
+/**
+ * \exception InvalidKey
+ * \brief An exception thrown when an invalid key is provided to a cipher
+ */
+class InvalidKey : public std::invalid_argument {
+public:
+  /**
+   * Create a new InvalidKey exception
+   *
+   * \param msg a message conveying the details of the invalid key
+   */
+  InvalidKey( const std::string& msg) :
+    std::invalid_argument(msg){}
 };
 
 #endif

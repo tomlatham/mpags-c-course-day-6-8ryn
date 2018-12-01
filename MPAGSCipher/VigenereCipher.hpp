@@ -4,6 +4,7 @@
 // Standard library includes
 #include <string>
 #include <map>
+#include <stdexcept>
 
 // Our project headers
 #include "Cipher.hpp"

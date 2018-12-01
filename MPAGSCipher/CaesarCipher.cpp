@@ -3,8 +3,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <future>
-#include <thread>
 
 // Out project headers
 #include "Alphabet.hpp"
@@ -20,26 +18,21 @@ CaesarCipher::CaesarCipher( const std::string& key )
   : key_{0}
 {
   // We have the key as a string, but the Caesar cipher needs an unsigned long, so we first need to convert it
-  // We default to having a key of 0, i.e. no encryption, if no (valid) key was provided on the command line
   if ( ! key.empty() ) {
       try{
 	key_ = std::stoul(key) % Alphabet::size;
       }
       catch(std::invalid_argument){
-	std::cerr << "[error] cipher key must be an unsigned long integer for Caesar cipher,\
-\n"
-		<< "        the supplied key (" << key << ") could not be successfully con\
-verted" << std::endl;
+	std::cerr << "[error] cipher key must be an unsigned long integer for Caesar cipher,\n"
+		<< "        the supplied key (" << key << ") could not be successfully converted" << std::endl;
 	return;
       }
       catch(std::out_of_range){
-	std::cerr << "[error] cipher key must be an unsigned long integer for Caesar cipher,\
-\n"
-		<< "        the supplied key (" << key << ") could not be successfully con\
-verted likely due to being too long" << std::endl;
+	std::cerr << "[error] cipher key must be an unsigned long integer for Caesar cipher,\n"
+		<< "        the supplied key (" << key << ") could not be successfully converted \
+likely due to being too long" << std::endl;
       return;
       }
-    
   }
 }
 
