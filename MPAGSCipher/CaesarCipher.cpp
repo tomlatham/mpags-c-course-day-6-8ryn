@@ -19,20 +19,24 @@ CaesarCipher::CaesarCipher( const std::string& key )
 {
   // We have the key as a string, but the Caesar cipher needs an unsigned long, so we first need to convert it
   if ( ! key.empty() ) {
-      try{
-	key_ = std::stoul(key) % Alphabet::size;
-      }
-      catch(std::invalid_argument){
-	std::cerr << "[error] cipher key must be an unsigned long integer for Caesar cipher,\n"
-		<< "        the supplied key (" << key << ") could not be successfully converted" << std::endl;
-	return;
-      }
-      catch(std::out_of_range){
-	std::cerr << "[error] cipher key must be an unsigned long integer for Caesar cipher,\n"
-		<< "        the supplied key (" << key << ") could not be successfully converted \
-likely due to being too long" << std::endl;
-      return;
-      }
+
+    // First, explicitly check for negative numbers - these will convert successfully but will not lead to expected results
+    if ( key.front() == '-' ) {
+      throw InvalidKey("Caesar cipher requires an unsigned long integer key, the supplied key (" + key + ") could not be successfully converted");
+    }
+
+    // The conversion function will throw an exception if the string does not
+    // represent a valid unsigned long integer, catch these cases and re-throw
+    // our own exception
+    try{
+      key_ = std::stoul(key) % Alphabet::size;
+    }
+    catch( std::invalid_argument& ){
+      throw InvalidKey("Caesar cipher requires an unsigned long integer key, the supplied key (" + key + ") could not be successfully converted");
+    }
+    catch( std::out_of_range& ){
+      throw InvalidKey("Caesar cipher requires an unsigned long integer key, the supplied key (" + key + ") was not in the right range");
+    }
   }
 }
 

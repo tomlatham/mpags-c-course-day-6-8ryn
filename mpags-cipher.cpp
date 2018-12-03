@@ -14,7 +14,7 @@
 #include "CipherType.hpp"
 #include "TransformChar.hpp"
 #include "ProcessCommandLine.hpp"
-  
+
 // Main function of the mpags-cipher program
 int main(int argc, char* argv[])
 {
@@ -32,6 +32,7 @@ int main(int argc, char* argv[])
     return 1;
   } catch (const UnknownArgument& e){
     std::cerr << "[error] Unknown argument: " << e.what() <<std::endl;
+    return 1;
   }
 
 
@@ -105,10 +106,15 @@ int main(int argc, char* argv[])
     }
   }
 
+  std::unique_ptr<Cipher> cipher{};
   try{
-  // Request construction of the appropriate cipher
-  auto cipher = cipherFactory( settings.cipherType, settings.cipherKey );
-  
+    // Request construction of the appropriate cipher
+    cipher = cipherFactory( settings.cipherType, settings.cipherKey );
+  }catch (const InvalidKey& e){
+    std::cerr << "[error] Invalid key: " << e.what() << std::endl;
+    return 1;
+  }
+
   // Check that the cipher was constructed successfully
   if ( ! cipher ) {
     std::cerr << "[error] problem constructing requested cipher" << std::endl;
@@ -119,30 +125,30 @@ int main(int argc, char* argv[])
 
   // Implements multi-threaded processing of Caesar Cipher
   if( settings.cipherType == CipherType::Caesar){
-    
+
     auto fn = [&] (size_t first, size_t len ){
       return (cipher->applyCipher( inputText.substr(first, len), settings.cipherMode));
     };
-    
+
     int numThreads = 4;
     size_t inputLength = inputText.length();
     std::vector<std::future< std::string>> futures;
-    
+
     for( int i{0}; i< numThreads; ++i){
       if ( i != (numThreads-1)){
-	futures.push_back( std::async(fn, i*inputLength/numThreads,inputLength/numThreads));
+        futures.push_back( std::async(fn, i*inputLength/numThreads,inputLength/numThreads));
       }
       else{
-	futures.push_back( std::async(fn, i*inputLength/numThreads, inputLength/numThreads + inputLength%numThreads));
+        futures.push_back( std::async(fn, i*inputLength/numThreads, inputLength/numThreads + inputLength%numThreads));
       }
     }
     for( auto &elem : futures){
       std::future_status status;
       do {
-      status = elem.wait_for(std::chrono::seconds(10));
-      if (status == std::future_status::timeout) {
-	std::cout << "waiting... \n";
-      }
+        status = elem.wait_for(std::chrono::seconds(10));
+        if (status == std::future_status::timeout) {
+          std::cout << "waiting... \n";
+        }
       }
       while (status != std::future_status::ready);
       outputText += elem.get();
@@ -150,12 +156,10 @@ int main(int argc, char* argv[])
   }
   //Other ciphers done without multi-threading
   else{
-  
-  
     // Run the cipher on the input text, specifying whether to encrypt/decrypt
     outputText = cipher->applyCipher( inputText, settings.cipherMode ) ;
-    }
-    
+  }
+
   // Output the transliterated text
   if (!settings.outputFile.empty()) {
 
@@ -178,9 +182,4 @@ int main(int argc, char* argv[])
   // No requirement to return from main, but we do so for clarity
   // and for consistency with other functions
   return 0;
-  
-  }catch (const InvalidKey& e){
-    std::cerr << "[error] Invalid key: " << e.what() << std::endl;
-    return 1;
-  }
 }
